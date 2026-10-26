@@ -754,7 +754,7 @@ class LLM(llm.LLM):
     @staticmethod
     def with_perplexity(
         *,
-        model: str | PerplexityChatModels = "llama-3.1-sonar-small-128k-chat",
+        model: str | PerplexityChatModels = "sonar-pro",
         api_key: str | None = None,
         base_url: str = "https://api.perplexity.ai",
         client: openai.AsyncClient | None = None,
@@ -770,8 +770,10 @@ class LLM(llm.LLM):
         """
         Create a new instance of PerplexityAI LLM.
 
-        ``api_key`` must be set to your TogetherAI API key, either using the argument or by setting
+        ``api_key`` must be set to your Perplexity API key, either using the argument or by setting
         the ``PERPLEXITY_API_KEY`` environmental variable.
+
+        For the Perplexity Agent API, use ``livekit.plugins.perplexity.responses.LLM``.
         """
 
         api_key = api_key or os.environ.get("PERPLEXITY_API_KEY")
