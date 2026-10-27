@@ -22,14 +22,23 @@ voice agents.
 from livekit.agents import Plugin
 
 from . import responses
+from .decision_model import DecisionModel
 from .llm import LLM
 from .log import logger
-from .models import PerplexityChatModels, PerplexityResponsesModels
+from .models import (
+    DecisionModels,
+    OpenRouterDecisionModels,
+    PerplexityChatModels,
+    PerplexityResponsesModels,
+)
 from .version import __version__
 
 __all__ = [
     "responses",
     "LLM",
+    "DecisionModel",
+    "DecisionModels",
+    "OpenRouterDecisionModels",
     "PerplexityChatModels",
     "PerplexityResponsesModels",
     "logger",
