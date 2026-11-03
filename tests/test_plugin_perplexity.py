@@ -1,7 +1,11 @@
 from __future__ import annotations
 
+from typing import get_args
+
 import pytest
 
+from livekit.plugins.openai import LLM as OpenAILLM
+from livekit.plugins.openai.models import PerplexityChatModels
 from livekit.plugins.perplexity import LLM, __version__
 from livekit.plugins.perplexity.llm import PERPLEXITY_BASE_URL
 
@@ -35,3 +39,10 @@ def test_missing_api_key_raises(monkeypatch: pytest.MonkeyPatch) -> None:
 def test_provider_name(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv("PERPLEXITY_API_KEY", "test-key")
     assert LLM().provider == "Perplexity"
+
+
+def test_openai_with_perplexity_default_is_a_listed_model(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("PERPLEXITY_API_KEY", "test-key")
+    llm = OpenAILLM.with_perplexity()
+    assert llm.model == "sonar-pro"
+    assert llm.model in get_args(PerplexityChatModels)
