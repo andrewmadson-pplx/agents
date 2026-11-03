@@ -15,6 +15,7 @@ from livekit.agents.utils import is_given
 from livekit.plugins import openai
 
 from ..models import PerplexityResponsesModels
+from ..tools import PerplexityTool
 from ..version import __version__
 
 PERPLEXITY_RESPONSES_BASE_URL = "https://api.perplexity.ai/v1"
@@ -47,6 +48,8 @@ def _create_client(
 
 
 class LLM(openai.responses.LLM):
+    _provider_tool_type = PerplexityTool
+
     def __init__(
         self,
         *,
