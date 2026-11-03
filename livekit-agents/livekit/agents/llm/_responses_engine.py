@@ -505,7 +505,7 @@ class ResponsesLLMStream(llm.LLMStream):
             text = "".join(
                 part.text
                 for item in output
-                if isinstance(item, ResponseOutputMessage)
+                if isinstance(item, ResponseOutputMessage) and item.type == "message"
                 for part in item.content
                 if part.type == "output_text"
             )
@@ -535,7 +535,7 @@ class ResponsesLLMStream(llm.LLMStream):
                     prompt_cached_tokens=usage.input_tokens_details.cached_tokens
                     if usage.input_tokens_details
                     else 0,
-                    cache_creation_tokens=usage.input_tokens_details.cache_write_tokens
+                    cache_creation_tokens=usage.input_tokens_details.cache_write_tokens or 0
                     if usage.input_tokens_details
                     else 0,
                     reasoning_tokens=usage.output_tokens_details.reasoning_tokens

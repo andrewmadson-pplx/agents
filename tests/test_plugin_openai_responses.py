@@ -9,8 +9,13 @@ from unittest.mock import AsyncMock, MagicMock
 import aiohttp
 import httpx2 as httpx
 import pytest
+from openai._models import construct_type
 from openai.types import Reasoning
-from openai.types.responses import ResponseCreatedEvent, ResponseIncompleteEvent
+from openai.types.responses import (
+    ResponseCreatedEvent,
+    ResponseIncompleteEvent,
+    ResponseStreamEvent,
+)
 
 from livekit.agents import APIConnectionError, APIConnectOptions, APIStatusError, llm as agents_llm
 from livekit.plugins.openai.responses.llm import (
@@ -862,3 +867,57 @@ async def test_chained_request_sends_only_items_after_previous_response() -> Non
     assert len(interrupted["input"]) == 8
     assert last["previous_response_id"] == "resp_3"
     assert last["input"] == [{"role": "user", "content": "Bye"}]
+
+
+async def test_http_completed_response_with_provider_items_and_partial_usage() -> None:
+    """The SDK builds HTTP stream events leniently. Provider tool items of types it does not
+    know (e.g. Perplexity's `search_results`) become a `ResponseOutputMessage` with no
+    content, and usage fields the provider omits become None."""
+    completed = {
+        "type": "response.completed",
+        "sequence_number": 1,
+        "response": {
+            **_RESPONSE_CREATED["response"],
+            "status": "completed",
+            "output": [
+                {"type": "search_results", "queries": ["paris weather"], "results": []},
+                _output_message("Sunny."),
+            ],
+            "usage": {
+                "input_tokens": 10,
+                "output_tokens": 2,
+                "total_tokens": 12,
+                "input_tokens_details": {"cached_tokens": 0},
+                "output_tokens_details": {"reasoning_tokens": 0},
+            },
+        },
+    }
+    events = [
+        construct_type(type_=ResponseStreamEvent, value=event)
+        for event in (_RESPONSE_CREATED, completed)
+    ]
+    client = MagicMock()
+    client._base_url = httpx.URL("https://api.perplexity.ai/v1")
+    client.responses.create = AsyncMock(side_effect=lambda **_kwargs: _ReplayHTTPStream(events))
+    llm_model = ResponsesLLM(model="perplexity/sonar", client=client, use_websocket=False)
+
+    chat_ctx = agents_llm.ChatContext.empty()
+    chat_ctx.add_message(role="user", content="Weather in Paris?")
+
+    usage: agents_llm.CompletionUsage | None = None
+    try:
+        async with llm_model.chat(
+            chat_ctx=chat_ctx, conn_options=APIConnectOptions(max_retry=0, timeout=5.0)
+        ) as stream:
+            async for chunk in stream:
+                if chunk.usage is not None:
+                    usage = chunk.usage
+    finally:
+        await llm_model.aclose()
+
+    assert usage is not None
+    assert usage.cache_creation_tokens == 0
+    assert llm_model._prev_resp_items == [
+        {"role": "user", "content": "Weather in Paris?"},
+        {"role": "assistant", "content": "Sunny."},
+    ]
