@@ -48,3 +48,17 @@ llm = perplexity.responses.LLM(
 The Responses LLM uses `base_url="https://api.perplexity.ai/v1"`, disables
 websocket transport, and sends the same `X-Pplx-Integration` attribution header
 on its OpenAI-compatible client.
+
+Agent API built-in tools run on Perplexity's servers. Pass them to the agent
+with the Responses LLM:
+
+```python
+from livekit.agents import Agent
+from livekit.plugins import perplexity
+
+agent = Agent(
+    instructions="You are a helpful assistant.",
+    llm=perplexity.responses.LLM(model="openai/gpt-5.5"),
+    tools=[perplexity.WebSearch(max_results=5), perplexity.FetchUrl(max_urls=1)],
+)
+```

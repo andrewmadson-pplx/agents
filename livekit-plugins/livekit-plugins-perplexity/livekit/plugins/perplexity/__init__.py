@@ -25,6 +25,7 @@ from . import responses
 from .llm import LLM
 from .log import logger
 from .models import PerplexityChatModels, PerplexityResponsesModels
+from .tools import FetchUrl, WebSearch
 from .version import __version__
 
 __all__ = [
@@ -32,6 +33,8 @@ __all__ = [
     "LLM",
     "PerplexityChatModels",
     "PerplexityResponsesModels",
+    "WebSearch",
+    "FetchUrl",
     "logger",
     "__version__",
 ]
