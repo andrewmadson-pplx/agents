@@ -536,6 +536,7 @@ class ResponsesLLMStream(llm.LLMStream):
                     part.text
                     for item in output
                     if isinstance(item, ResponseOutputMessage)
+                    and item.type == "message"
                     and (item.phase == "commentary") == commentary
                     for part in item.content
                     if part.type == "output_text"
